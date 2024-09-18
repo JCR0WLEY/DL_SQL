@@ -1,0 +1,148 @@
+Ingredients that are on an inventory set 
+but contain the string ‘ZDNU’ and are not prepped items
+
+SELECT *
+  FROM [Prod_Client_IdaClaire].[dbo].[tb_InventorySetProductMap]
+  RIGHT JOIN [dbo].[tb_Ingredients] ON [dbo].[tb_InventorySetProductMap].[ProductID]=[dbo].[tb_Ingredients].[ProductID]
+  WHERE ProductDescription LIKE '%ZDNU%' AND ProductDescription NOT LIKE '%PREP%' AND InventorySet IS NOT NULL
+
+Finding employees across stores with a similar SSN to determine why a new employee was unable to be added
+
+SELECT
+	  [dbo].emp_IDs.ID
+	  ,[FirstName]
+      ,[LastName]
+      ,[Active]
+      ,[DirtyFlag]
+      ,[IgnoreFlag]
+	  ,[dbo].emp_Stores.StoreID
+	  ,dbo.tb_Stores.StoreName
+		
+  FROM [Prod_Client_BestChoice].[dbo].[emp_IDs]
+  INNER JOIN [dbo].[emp_Stores] ON [dbo].[emp_IDs].ID=[dbo].[emp_Stores].ID
+  INNER JOIN [dbo].tb_Stores ON dbo.emp_Stores.StoreID=dbo.tb_Stores.StoreID
+  WHERE SUBSTRING(SSN,6,9)=7827
+
+Automated COGS update
+Find orders with unmapped ingredients or IMX v2 with OQTY Helpful CS SQL Scripts 
+
+--Validate Sales > 0
+--On Prod_Client_Schlotzskys
+SELECT S.StoreID
+	,S.StoreName
+	,DS.GrossSales
+	,(SELECT COUNT(date) WHERE GrossSales > 0)
+	--,MIN(DATE)
+	--,MAX(DATE)
+FROM dly_Summary DS
+JOIN tb_Stores S ON (DS.StoreID = S.StoreID)
+WHERE DS.StoreID IN (
+		2
+		,4
+		,5
+		,6
+		,9
+		,21
+		,22
+		,84
+		,85
+		,96
+		,98
+		,99
+		)
+	AND DATE BETWEEN '2021-03-24'
+		AND '2021-03-28'
+GROUP BY S.StoreID
+	,S.StoreName
+	,DS.GrossSales
+ORDER BY S.StoreName
+
+--On dbprod02.Prod_Global_UDT
+--Find stores with missing task element values
+SELECT *
+FROM UDT_StoreTasks st
+JOIN (
+	SELECT ID
+		,Name
+		,Version
+	FROM UDT_Tasks
+	WHERE Name = 'AlohaJournal2010'
+		AND Version = '1.0.0.11'
+	) t ON st.TaskID = t.ID
+LEFT JOIN UDT_StoreTaskElements ste ON st.ID = ste.StoreTaskID
+LEFT JOIN (
+	SELECT StoreId
+		,CustomerStoreId
+		,StoreName
+		,[UDT ID]
+	FROM dbprod11.prod_client_Schlotzskys.dbo.vw_StoreInfo
+	) si ON st.StoreID = si.[UDT ID]
+WHERE ste.ID IS NULL
+ORDER BY CustomerStoreId
+
+Find items on a menu set with a particular POS ID
+ 
+SELECT dbo.tb_MenuSetMenuItemMap.MenuSet
+      ,dbo.tb_MenuSets.SetName
+	  ,[MenuItem]
+      ,[MenuNumber]
+      ,[Price]
+      ,[CategoryID]
+      ,[DepartmentID]
+      ,[BeginDate]
+      ,[TimeStamp]
+      ,[USerID]
+  FROM [Prod_Client_FBFastCasual].[dbo].[tb_MenuSetMenuItemMap]
+  JOIN dbo.tb_MenuSets ON dbo.tb_MenuSetMenuItemMap.MenuSet=dbo.tb_MenuSets.MenuSet
+  WHERE dbo.tb_MenuSetMenuItemMap.MenuSet=7 AND MenuNumb
+
+Find latest date for TaxType 2 at MCA
+
+SELECT TOP 10 * FROM dly_GrossTaxes WHERE TaxType = 2 AND Tax > 0 ORDER BY DATE DESC
+
+SELECT * FROM tb_Stores WHERE StoreID = 288
+
+Find DCItem numbers with trailing spaces
+SELECT * FROM tb_BidFile BF
+	JOIN tb_Distributors D ON (BF.DCID = D.DCID)
+WHERE D.DCID IN (47,49,51,167,220,221,258,259,266,163,256,257,260)
+	AND DCItemNumber LIKE '% '
+
+Finding a list of users that have access to DL for a particular Group
+
+SELECT tb_users.UserID
+      ,[UserName]
+      ,[Password]
+      ,[FirstName]
+      ,[LastName]
+  FROM [Prod_Client_FamousDaves].[dbo].[tb_Users]
+  JOIN [dbo].[tb_UserProfileMap] ON dbo.tb_Users.UserID=dbo.tb_UserProfileMap.UserID
+  JOIN dbo.tb_Groups ON dbo.tb_UserProfileMap.GroupID=dbo.tb_Groups.GroupID
+  WHERE dbo.tb_UserProfileMap.GroupID=15
+
+Finding an employee with known name and unknown store
+SELECT dbo.emp_IDs.ID
+      ,[FirstName]
+      ,[LastName]
+	  ,dbo.emp_Stores.StoreID
+	  ,dbo.tb_Stores.StoreName
+  FROM [Prod_Client_McAlisters].[dbo].[emp_IDs]
+  JOIN dbo.emp_Stores ON dbo.emp_IDs.ID = dbo.emp_Stores.ID
+  JOIN dbo.tb_Stores ON dbo.emp_Stores.StoreID = dbo.tb_Stores.StoreID
+  WHERE FirstName='Bradley' AND LastName='Rodriguez'
+
+A list of checks for a given date for a location
+
+SELECT [Date]
+      ,[CheckNumber]
+  FROM [Prod_Client_Moes].[dbo].[chk_Checks]
+  JOIN dbo.tb_Stores ON dbo.chk_Checks.StoreID = dbo.tb_Stores.StoreID
+  WHERE dbo.tb_Stores.CustomerStoreID = 223 AND Date BETWEEN '2021-04-28' and '2021-04-28'
+  ORDER BY Date DESC
+
+
+
+
+
+
+
